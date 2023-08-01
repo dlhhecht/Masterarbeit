@@ -11,22 +11,28 @@ from sklearn.ensemble import RandomForestClassifier
 ###########################################
 
 SIZE = 256
-#Load model without classifier/fully connected layers
+#Load model without classifier/fully connected layers and make loaded layers as non-trainable.
 VGG_model = VGG16(weights='imagenet', include_top=False, input_shape=(SIZE, SIZE, 3))
-
-#Make loaded layers as non-trainable. This is important as we want to work with pre-trained weights
 for layer in VGG_model.layers:
 	layer.trainable = False
     
-VGG_model.summary()  #Trainable parameters will be 0
+#VGG_model.summary() #trainable params should be 0
 
 ###########################################
 #functions
 ###########################################
 
 def preprocess_with_VGG16(img):
+	
+	# 
+	# Pre: 
+	#	img: 		4 dimensional numpy array with samples, rows, columns and channels
+	# Post:
+	#	features: 	1 dimensional numpy array with features
+	#
+	
     features = VGG_model.predict(img)
-    features = features.reshape(-1)#features.reshape(features.shape[0], -1)
+    features = features.reshape(-1)   #features.reshape(features.shape[0], -1)
     return features
 
 def load_images_and_labels(path,size):
