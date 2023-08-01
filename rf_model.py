@@ -1,6 +1,5 @@
 import numpy as np 
 import os
-#import seaborn as sns
 from keras.applications.vgg16 import VGG16, preprocess_input
 import pandas as pd
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
@@ -30,12 +29,28 @@ def preprocess_with_VGG16(img):
 	# Post:
 	#	features: 	1 dimensional numpy array with features
 	#
+	# Description:
+	# 	Feature extraction with VGG16 and loaded weights.
+	#
 	
     features = VGG_model.predict(img)
     features = features.reshape(-1)   #features.reshape(features.shape[0], -1)
+	
     return features
 
 def load_images_and_labels(path,size):
+
+	#
+	# Pre:
+	#	path:		string with folder path
+	#	size: 		integer with requested image size (size x size)
+	# Post:
+	#	df: 		pandas dataframe with columns ['object_id','image','label','feature'] 
+	#
+	# Description:
+	#	Function loads Data from folder in path
+	#
+	
     df = pd.DataFrame(columns=['object_id','image','label','feature'])
     img_list = os.listdir(path)
     
@@ -44,7 +59,6 @@ def load_images_and_labels(path,size):
         img_array = img_to_array(img)
         img_array = np.expand_dims(img_array, axis=0)
         img_array = preprocess_input(img_array)
-
 
         obj_id = img_list[i].split("_")[0]
         label = img_list[i].split("_")[2][:-4] 
@@ -62,6 +76,18 @@ def load_images_and_labels(path,size):
     return df
 
 def elementwise_max(df_input):
+
+	# 
+	# Pre:
+	#	df_input:	pandas dataframe with columns ['object_id','image','label','feature'] 
+	# Post:
+	#	df:		pandas dataframe with columns ['object_id','label','feature'] 
+	#
+	# Description:
+	#	From here we start with multi view. Function takes the extracted features of every image in the data set
+	#	as input and does elementwise max operation for every image with the same object id (Multi View).
+	#
+
     df = pd.DataFrame(columns=['object_id','label','feature'])
     for name, group in df_input.groupby('object_id'):
         group_with_same_obj_id = np.asarray(group['feature'])
@@ -79,6 +105,7 @@ def elementwise_max(df_input):
 
         new_row = pd.DataFrame(new_data)
         df = pd.concat([df, new_row], ignore_index=True)
+	    
     return df
 
 ###########################################
@@ -90,8 +117,6 @@ df_test_set = load_images_and_labels('images/validation', SIZE)
 
 df_train_set_grouped_and_maxed = elementwise_max(df_train_set)
 df_test_set_grouped_and_maxed = elementwise_max(df_test_set)
-
-#test= df_train_set_grouped_and_maxed['feature'][0]
 
 X_train = df_train_set_grouped_and_maxed['feature'].apply(pd.Series)
 y_train = df_train_set_grouped_and_maxed['label']
