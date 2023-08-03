@@ -95,7 +95,7 @@ def elementwise_max(df_input):
         for x in range(0,group_with_same_obj_id.shape[0]):
             for y in range(0,len(group_with_same_obj_id[0])):
                 if group_with_same_obj_id[x][y]>curr_feature[y]:
-                    curr_feature[y] = group_with_same_obj_id[x,y]
+                    curr_feature[y] = group_with_same_obj_id[x][y]
         
         new_data = {
             'object_id': [np.asarray(group['object_id'])[0]],
